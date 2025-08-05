@@ -29,9 +29,10 @@ public class CategoryController {
     }
 
     @GetMapping("/getallcategories")
-    public APIResponse getAllCategories() {
+    public APIResponse getAllCategories(@RequestParam(required = false) String categoryId,
+                                        @RequestParam(required = false) String subCategoryId) {
         logger.info("getAllCategories API called!!");
-        return categoryService.getAllCategories();
+        return categoryService.getAllCategories(categoryId, subCategoryId);
     }
 
     @PatchMapping("/update")

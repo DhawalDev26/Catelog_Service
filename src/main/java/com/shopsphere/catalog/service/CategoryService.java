@@ -8,7 +8,7 @@ public interface CategoryService {
 
     APIResponse getCategoryById(String id);
 
-    APIResponse getAllCategories();
+    APIResponse getAllCategories(String categoryId, String subCategoryId);
 
     APIResponse updateCategory(String id, CreateCategoryRequest categoryRequest);
 

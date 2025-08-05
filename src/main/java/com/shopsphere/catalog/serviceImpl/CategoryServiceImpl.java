@@ -81,9 +81,9 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public APIResponse getAllCategories() {
+    public APIResponse getAllCategories(String categoryId, String subCategoryId) {
         try {
-            List<Category> categories = categoryRepository.findAll();
+            List<Category> categories = categoryRepository.findAllByCategoryIdAndSubCategoryId(categoryId, subCategoryId);
 
             if (categories.isEmpty()) {
                 return APIResponse.builder()

@@ -7,6 +7,8 @@ import com.shopsphere.catalog.entity.Product;
 import com.shopsphere.catalog.repository.CategoryRepository;
 import com.shopsphere.catalog.repository.ProductRepository;
 import com.shopsphere.catalog.service.ProductService;
+import com.shopsphere.catalog.utils.SKUUtil;
+import com.shopsphere.catalog.utils.SlugUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,14 +60,14 @@ public class ProductServiceImpl implements ProductService {
             if (optionalCategory.isPresent() && optionalSubCategory.isPresent()) {
                 Product product = Product.builder()
                         .name(productRequest.getName())
-                        .slug(productRequest.getSlug())
+                        .slug(SlugUtil.generateSlug(productRequest.getName()))
                         .description(productRequest.getDescription())
                         .brand(productRequest.getBrand())
                         .categoryId(productRequest.getCategoryId())
                         .subCategoryId(productRequest.getSubCategoryId())
                         .price(productRequest.getPrice())
                         .stock(productRequest.getStock())
-                        .sku(productRequest.getSku())
+                        .sku(SKUUtil.generateSKU(productRequest.getName(), productRequest.getBrand()))
                         .images(productRequest.getImages())
                         .attributes(productRequest.getAttributes())
                         .tags(productRequest.getTags())
@@ -242,19 +244,27 @@ public class ProductServiceImpl implements ProductService {
             }
 
             // Update fields
-            existingProduct.setName(productRequest.getName());
-            existingProduct.setSlug(productRequest.getSlug());
-            existingProduct.setDescription(productRequest.getDescription());
-            existingProduct.setBrand(productRequest.getBrand());
-            existingProduct.setCategoryId(productRequest.getCategoryId());
-            existingProduct.setSubCategoryId(productRequest.getSubCategoryId());
-            existingProduct.setPrice(productRequest.getPrice());
-            existingProduct.setStock(productRequest.getStock());
-            existingProduct.setSku(productRequest.getSku());
-            existingProduct.setImages(productRequest.getImages());
-            existingProduct.setAttributes(productRequest.getAttributes());
-            existingProduct.setTags(productRequest.getTags());
-            existingProduct.setUpdatedAt(LocalDateTime.now());
+            if (productRequest.getName() != null) {
+                existingProduct.setName(productRequest.getName());
+            }
+            if (productRequest.getDescription() != null) {
+                existingProduct.setDescription(productRequest.getDescription());
+            }
+            if (productRequest.getBrand() != null) {
+                existingProduct.setBrand(productRequest.getBrand());
+            }
+            if (productRequest.getPrice() != null) {
+                existingProduct.setPrice(productRequest.getPrice());
+            }
+            if (productRequest.getImages() != null) {
+                existingProduct.setImages(productRequest.getImages());
+            }
+            if (productRequest.getAttributes() != null) {
+                existingProduct.setAttributes(productRequest.getAttributes());
+            }
+            if (productRequest.getTags() != null) {
+                existingProduct.setTags(productRequest.getTags());
+            }
 
             Product updatedProduct = productRepository.save(existingProduct);
 
