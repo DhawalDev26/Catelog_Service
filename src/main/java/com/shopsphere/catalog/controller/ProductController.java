@@ -25,12 +25,15 @@ public class ProductController {
     }
 
     @GetMapping("/getAllProducts")
-    public APIResponse getAllProducts(@RequestParam(required = true) String tenantId,
+    public APIResponse getAllProducts(@RequestParam(required = false) String tenantId,
                                       @RequestParam(required = false) String categoryId,
                                       @RequestParam(required = false) String subCategoryId,
                                       @RequestParam(required = false) String brand,
-                                      @RequestParam(required = false) String name) {
-        return productService.getAllProducts(tenantId, categoryId, subCategoryId, brand, name);
+                                      @RequestParam(required = false) String name,
+                                      @RequestParam(required = false) Double minPrice,
+                                      @RequestParam(required = false) Double maxPrice,
+                                      @RequestParam(required = false) Boolean inStock) {
+        return productService.getAllProducts(tenantId, categoryId, subCategoryId, brand, name, minPrice, maxPrice, inStock);
     }
 
     @PatchMapping("/update")

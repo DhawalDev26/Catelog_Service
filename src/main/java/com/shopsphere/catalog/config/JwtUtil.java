@@ -17,8 +17,7 @@ import java.util.Optional;
 public class JwtUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
-    //    private final String secretKey = "afafasfafafasfasfasfafacasdasfasxASFACASDFACASDFASFASFDAFASFASDAADSCSDFADCVSGCFVADXCQWEDFGHJUY";
-    private final String secretKey = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
+    private final String secretKey = "afafasfafafasfasfasfafacasdasfasxASFACASDFACASDFASFASFDAFASFASDAADSCSDFADCVSGCFVADXCQWEDFGHJUY";
     private long accessTokenValidity = 5 * 60 * 60 * 1000; // 5 hours in milliseconds
 
     private final JwtParser jwtParser;

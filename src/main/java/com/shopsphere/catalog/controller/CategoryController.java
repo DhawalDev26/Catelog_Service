@@ -28,7 +28,7 @@ public class CategoryController {
         return categoryService.getCategoryById(id);
     }
 
-    @GetMapping("/getallcategories")
+    @GetMapping("/getallcategory")
     public APIResponse getAllCategories(@RequestParam(required = false) String categoryId,
                                         @RequestParam(required = false) String subCategoryId) {
         logger.info("getAllCategories API called!!");

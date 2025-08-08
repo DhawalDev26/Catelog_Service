@@ -12,7 +12,7 @@ public interface ProductService {
 
     APIResponse deleteProduct(String id, String tenantId);
 
-    APIResponse getAllProducts(String tenantId, String categoryId, String subCategoryId, String brand, String name);
+    APIResponse getAllProducts(String tenantId, String categoryId, String subCategoryId, String brand, String name, Double minPrice, Double maxPrice, Boolean inStock);
 
     APIResponse updateProductStatus(String id, Boolean status);
 

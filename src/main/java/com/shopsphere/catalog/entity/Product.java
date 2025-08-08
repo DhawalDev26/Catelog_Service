@@ -2,6 +2,8 @@ package com.shopsphere.catalog.entity;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
@@ -14,6 +16,13 @@ import java.util.Map;
 @NoArgsConstructor
 @Builder
 @AllArgsConstructor
+@CompoundIndexes({
+        @CompoundIndex(name = "idx_tenant_cat_brand", def = "{'tenantId': 1, 'categoryId': 1, 'brand': 1}"),
+        @CompoundIndex(name = "idx_price_material", def = "{'price': 1, 'material': 1}"),
+        @CompoundIndex(name = "idx_subCategory", def = "{'subCategoryId': 1}"),
+        @CompoundIndex(name = "idx_stock", def = "{'stock': 1}"),
+        @CompoundIndex(name = "idx_name", def = "{'name': 1}")
+})
 public class Product {
 
     @Id

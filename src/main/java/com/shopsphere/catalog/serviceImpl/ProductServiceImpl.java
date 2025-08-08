@@ -12,10 +12,14 @@ import com.shopsphere.catalog.utils.SlugUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -29,6 +33,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Autowired
+    private MongoTemplate mongoTemplate;
 
     @Override
     public APIResponse addProduct(CreateProductRequest productRequest) {
@@ -126,18 +133,39 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public APIResponse getAllProducts(String tenantId, String categoryId, String subCategoryId, String brand, String name) {
+    public APIResponse getAllProducts(String tenantId, String categoryId, String subCategoryId, String brand,
+                                      String name, Double minPrice, Double maxPrice, Boolean inStock) {
         try {
-            // Fetch all products by tenantId
-            List<Product> productList = productRepository.findByTenantId(tenantId);
+            Query query = new Query();
+            List<Criteria> criteriaList = new ArrayList<>();
 
-            // Filter further using Stream API if optional filters are provided
-            List<Product> filteredProducts = productList.stream()
-                    .filter(product -> categoryId == null || categoryId.equals(product.getCategoryId()))
-                    .filter(product -> subCategoryId == null || subCategoryId.equals(product.getSubCategoryId()))
-                    .filter(product -> brand == null || brand.equalsIgnoreCase(product.getBrand()))
-                    .filter(product -> name == null || product.getName().toLowerCase().contains(name.toLowerCase()))
-                    .collect(Collectors.toList());
+            if (tenantId != null) criteriaList.add(Criteria.where("tenantId").is(tenantId));
+            if (categoryId != null) criteriaList.add(Criteria.where("categoryId").is(categoryId));
+            if (subCategoryId != null) criteriaList.add(Criteria.where("subCategoryId").is(subCategoryId));
+            if (brand != null) criteriaList.add(Criteria.where("brand").is(brand));
+            if (name != null) criteriaList.add(Criteria.where("name").regex(name, "i")); // case-insensitive name search
+
+            if (minPrice != null && maxPrice != null) {
+                criteriaList.add(Criteria.where("price").gte(minPrice).lte(maxPrice));
+            } else if (minPrice != null) {
+                criteriaList.add(Criteria.where("price").gte(minPrice));
+            } else if (maxPrice != null) {
+                criteriaList.add(Criteria.where("price").lte(maxPrice));
+            }
+
+            if (inStock != null) {
+                if (inStock) {
+                    criteriaList.add(Criteria.where("stock").gt(0));
+                } else {
+                    criteriaList.add(Criteria.where("stock").lte(0));
+                }
+            }
+
+            if (!criteriaList.isEmpty()) {
+                query.addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[0])));
+            }
+
+            List<Product> filteredProducts = mongoTemplate.find(query, Product.class);
 
             if (filteredProducts.isEmpty()) {
                 return APIResponse.builder()

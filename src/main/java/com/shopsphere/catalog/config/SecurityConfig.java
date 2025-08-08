@@ -41,7 +41,8 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**",
+                                "/swagger-ui.html/**").permitAll()
                         .requestMatchers("/products/**", "/category/**").authenticated()
                         .anyRequest().authenticated()
                 )
