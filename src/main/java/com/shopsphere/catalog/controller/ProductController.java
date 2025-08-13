@@ -47,11 +47,11 @@ public class ProductController {
         return productService.updateProductStatus(id, status);
     }
 
-    @PatchMapping("/updateStocks")
-    public APIResponse updateProductStocks(@RequestParam String id,
-                                     @RequestParam Integer stocks) {
-        return productService.updateProductStocks(id, stocks);
-    }
+//    @PatchMapping("/updateStocks")
+//    public APIResponse updateProductStocks(@RequestParam String id,
+//                                     @RequestParam Integer stocks) {
+//        return productService.updateProductStocks(id, stocks);
+//    }
 
     @DeleteMapping("/delete")
     public APIResponse deleteProduct(@RequestParam String id, @RequestParam String tenantId) {

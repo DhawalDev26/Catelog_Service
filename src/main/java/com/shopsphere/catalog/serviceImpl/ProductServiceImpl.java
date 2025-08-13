@@ -2,9 +2,12 @@ package com.shopsphere.catalog.serviceImpl;
 
 import com.shopsphere.catalog.dto.APIResponse;
 import com.shopsphere.catalog.dto.CreateProductRequest;
+import com.shopsphere.catalog.dto.InventoryRequest;
 import com.shopsphere.catalog.entity.Category;
+import com.shopsphere.catalog.entity.Inventory;
 import com.shopsphere.catalog.entity.Product;
 import com.shopsphere.catalog.repository.CategoryRepository;
+import com.shopsphere.catalog.repository.InventoryRepository;
 import com.shopsphere.catalog.repository.ProductRepository;
 import com.shopsphere.catalog.service.ProductService;
 import com.shopsphere.catalog.utils.SKUUtil;
@@ -33,6 +36,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Autowired
+    private InventoryRepository inventoryRepository;
 
     @Autowired
     private MongoTemplate mongoTemplate;
@@ -73,7 +79,6 @@ public class ProductServiceImpl implements ProductService {
                         .categoryId(productRequest.getCategoryId())
                         .subCategoryId(productRequest.getSubCategoryId())
                         .price(productRequest.getPrice())
-                        .stock(productRequest.getStock())
                         .sku(SKUUtil.generateSKU(productRequest.getName(), productRequest.getBrand()))
                         .images(productRequest.getImages())
                         .attributes(productRequest.getAttributes())
@@ -85,6 +90,20 @@ public class ProductServiceImpl implements ProductService {
                         .build();
 
                 Product savedProduct = productRepository.save(product);
+
+                Inventory newInventory = Inventory.builder()
+                        .productId(savedProduct.getId())
+                        .tenantId(Long.valueOf(savedProduct.getTenantId()))
+                        .availableQuantity(productRequest.getInventoryRequest().getAvailableQuantity())
+                        .reservedQuantity(productRequest.getInventoryRequest().getReservedQuantity())
+                        .safetyStock(productRequest.getInventoryRequest().getSafetyStock())
+                        .isActive(Boolean.TRUE)
+                        .lastUpdated(LocalDateTime.now())
+                        .build();
+
+                Inventory saveInventory = inventoryRepository.save(newInventory);
+
+                savedProduct.setInventory(saveInventory);
 
                 return APIResponse.builder()
                         .status(HttpStatus.CREATED)
@@ -109,28 +128,28 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public APIResponse getProductById(String id) {
         try {
-            Optional<Product> optionalProduct = productRepository.findById(id);
-
-            if (optionalProduct.isEmpty()) {
-                return APIResponse.builder()
-                        .status(HttpStatus.NOT_FOUND)
-                        .message("Product with ID " + id + " not found")
-                        .build();
-            }
+            Product product = productRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Product with ID " + id + " not found"));
 
             return APIResponse.builder()
                     .status(HttpStatus.OK)
                     .message("Product fetched successfully")
-                    .body(optionalProduct.get())
+                    .body(product)
                     .build();
 
+        } catch (RuntimeException ex) {
+            return APIResponse.builder()
+                    .status(HttpStatus.NOT_FOUND)
+                    .message(ex.getMessage())
+                    .build();
         } catch (Exception e) {
             return APIResponse.builder()
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .message("Error fetching category: " + e.getMessage())
+                    .message("Error fetching product: " + e.getMessage())
                     .build();
         }
     }
+
 
     @Override
     public APIResponse getAllProducts(String tenantId, String categoryId, String subCategoryId, String brand,
@@ -143,7 +162,8 @@ public class ProductServiceImpl implements ProductService {
             if (categoryId != null) criteriaList.add(Criteria.where("categoryId").is(categoryId));
             if (subCategoryId != null) criteriaList.add(Criteria.where("subCategoryId").is(subCategoryId));
             if (brand != null) criteriaList.add(Criteria.where("brand").is(brand));
-            if (name != null) criteriaList.add(Criteria.where("name").regex(name, "i")); // case-insensitive name search
+            if (name != null)
+                criteriaList.add(Criteria.where("name").regex(name, "i")); // case-insensitive name search
 
             if (minPrice != null && maxPrice != null) {
                 criteriaList.add(Criteria.where("price").gte(minPrice).lte(maxPrice));
@@ -218,35 +238,35 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-    @Override
-    public APIResponse updateProductStocks(String id, Integer stocks) {
-        try {
-            Optional<Product> optionalProduct = productRepository.findById(id);
-            if (optionalProduct.isEmpty()) {
-                return APIResponse.builder()
-                        .status(HttpStatus.NOT_FOUND)
-                        .message("Product not found with ID: " + id)
-                        .build();
-            }
-
-            Product product = optionalProduct.get();
-            product.setStock(stocks);
-            product.setUpdatedAt(LocalDateTime.now());
-            productRepository.save(product);
-
-            return APIResponse.builder()
-                    .status(HttpStatus.OK)
-                    .message("Product stock updated successfully")
-                    .body(product)
-                    .build();
-
-        } catch (Exception e) {
-            return APIResponse.builder()
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .message("Error updating product stock: " + e.getMessage())
-                    .build();
-        }
-    }
+//    @Override
+//    public APIResponse updateProductStocks(String id, Integer stocks) {
+//        try {
+//            Optional<Product> optionalProduct = productRepository.findById(id);
+//            if (optionalProduct.isEmpty()) {
+//                return APIResponse.builder()
+//                        .status(HttpStatus.NOT_FOUND)
+//                        .message("Product not found with ID: " + id)
+//                        .build();
+//            }
+//
+//            Product product = optionalProduct.get();
+//            product.setStock(stocks);
+//            product.setUpdatedAt(LocalDateTime.now());
+//            productRepository.save(product);
+//
+//            return APIResponse.builder()
+//                    .status(HttpStatus.OK)
+//                    .message("Product stock updated successfully")
+//                    .body(product)
+//                    .build();
+//
+//        } catch (Exception e) {
+//            return APIResponse.builder()
+//                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .message("Error updating product stock: " + e.getMessage())
+//                    .build();
+//        }
+//    }
 
     @Override
     public APIResponse updateProduct(String id, CreateProductRequest productRequest) {
@@ -314,23 +334,29 @@ public class ProductServiceImpl implements ProductService {
     public APIResponse deleteProduct(String id, String tenantId) {
         try {
             Optional<Product> optionalProduct = productRepository.findByIdAndTenantId(id, tenantId);
-
-            if (optionalProduct.isEmpty()) {
+            Product product = optionalProduct.get();
+            Optional<Inventory> optionalInventory = inventoryRepository.findByTenantIdAndProductId(Long.valueOf(tenantId), product.getId());
+            Inventory inventory = optionalInventory.get();
+            if (optionalProduct.isEmpty() && optionalInventory.isEmpty()) {
                 return APIResponse.builder()
                         .status(HttpStatus.NOT_FOUND)
-                        .message("Product not found for the given tenant")
+                        .message("Product and Inventory not found for the given tenant")
                         .build();
             }
 
-            Product product = optionalProduct.get();
             product.setIsActive(Boolean.FALSE);
             product.setUpdatedAt(LocalDateTime.now());
 
             productRepository.save(product);
 
+            inventory.setIsActive(Boolean.FALSE);
+            inventory.setLastUpdated(LocalDateTime.now());
+
+            inventoryRepository.save(inventory);
+
             return APIResponse.builder()
                     .status(HttpStatus.OK)
-                    .message("Product deleted successfully (soft delete)")
+                    .message("Product and Inventory deleted successfully (soft delete)")
                     .build();
 
         } catch (Exception e) {

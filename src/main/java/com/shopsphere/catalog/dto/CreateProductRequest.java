@@ -20,7 +20,7 @@ public class CreateProductRequest {
     private String categoryId;
     private String subCategoryId;
     private BigDecimal price;
-    private Integer stock;
+    private InventoryRequest inventoryRequest;
     private String sku;
     private String slug;
     private List<String> images;

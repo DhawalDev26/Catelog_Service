@@ -37,7 +37,7 @@ public class Product {
     private BigDecimal price;
     private BigDecimal finalPrice;
     private DiscountInfo discount;
-    private Integer stock;
+    private Inventory inventory;
     private String sku;
     private List<String> images;
     private Map<String, String> attributes;

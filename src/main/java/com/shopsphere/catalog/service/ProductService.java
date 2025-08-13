@@ -7,7 +7,7 @@ public interface ProductService {
     APIResponse addProduct(CreateProductRequest productRequest);
 
     APIResponse getProductById(String id);
-    
+
     APIResponse updateProduct(String id, CreateProductRequest productRequest);
 
     APIResponse deleteProduct(String id, String tenantId);
@@ -16,5 +16,5 @@ public interface ProductService {
 
     APIResponse updateProductStatus(String id, Boolean status);
 
-    APIResponse updateProductStocks(String id, Integer stocks);
+//    APIResponse updateProductStocks(String id, Integer stocks);
 }
